@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Business CRM</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --bg-light: #f1f5f9;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Components --- */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        input, select, textarea {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        /* --- Layout --- */
+        #app {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 250px;
+            background: #1e293b;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+        }
+
+        .brand {
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav {
+            flex: 1;
+            padding: 1rem;
+        }
+
+        nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            gap: 10px;
+        }
+
+        nav a:hover, nav a.active {
+            background: #334155;
+            color: white;
+        }
+
+        .user-profile {
+            padding: 1rem;
+            border-top: 1px solid #334155;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* --- Views --- */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Login Screen */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-light);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        /* Dashboard Specifics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-success { background: #dcfce7; color: #166534; }
+        .status-warning { background: #fef9c3; color: #854d0e; }
+        .status-danger { background: #fee2e2; color: #991b1b; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Invoice Print Styles */
+        #invoice-preview-area {
+            display: none;
+            background: white;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+        }
+
+        @media print {
+            body > * { display: none !important; }
+            #invoice-preview-area { display: block !important; }
+            .no-print { display: none !important; }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+        
+        .toast {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #app { flex-direction: column; }
+            aside { width: 100%; height: auto; transform: none; }
+            nav { display: flex; overflow-x: auto; padding: 0.5rem; }
+            nav a { flex: 0 0 auto; margin-bottom: 0; margin-right: 0.5rem; }
+            .user-profile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="margin-bottom: 1.5rem; text-align: center; color: var(--primary);">Business CRM</h2>
+            <form id="login-form">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="e.g. admin" required>
+                <label>Password</label>
+                <input type="password" id="password" placeholder="e.g. password123" required>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Secure Login</button>
+            </form>
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-light); text-align: center;">
+                Demo Users: <b>admin</b>, <b>sales</b>, <b>warehouse</b><br>Pass: <b>password123</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" style="display: none;">
+        <aside>
+            <div class="brand">
+                <span>📊 Nexus CRM</span>
+            </div>
+            <nav id="nav-menu">
+                <!-- Links injected via JS based on Role -->
+            </nav>
+            <div class="user-profile">
+                <div id="current-user-name" style="font-weight: bold;">User</div>
+                <div id="current-user-role" style="font-size: 0.8rem; opacity: 0.7;">Role</div>
+                <button onclick="app.logout()" style="margin-top: 0.5rem; font-size: 0.8rem; padding: 0.25rem 0.5rem; background: rgba(255,255,255,0.1); color: white;">Logout</button>
+            </div>
+        </aside>
+
+        <main>
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="view">
+                <h2>Sales Dashboard</h2>
+                <p style="margin-bottom: 1.5rem; color: var(--text-light);">Real-time overview of your business performance.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <label>Total Revenue</label>
+                        <div class="stat-value" id="dash-revenue">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <label>Active Deals</label>
+                        <div class="stat-value" id="dash-deals">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <label>Low Stock Items</label>
+                        <div class="stat-value" id="dash-stock" style="color: var(--danger)">0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Recent Sales Activity</h3>
+                        <select id="dash-filter" onchange="app.renderDashboard()" style="width: auto; margin: 0;">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-table-body">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Inventory View -->
+            <section id="view-inventory" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Stock Control</h2>
+                    <button class="btn-primary" onclick="app.openModal('modal-add-item')">+ Add Item</button>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <input type="text" id="inv-search" placeholder="Search items..." onkeyup="app.renderInventory()" style="margin-bottom: 0;">
+                        <select id="inv-filter" onchange="app.renderInventory()" style="width: 150px; margin-bottom: 0;">
+                            <option value="all">All Stock</option>
+                            <option value="low">Low Stock</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Product Name</th>
+                                <th>Stock</th>
+                                <th>Threshold</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Sales/Leads View -->
+            <section id="view-sales" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Pipeline Management</h2>
+                    <button class="btn-primary" onclick="app.openModal('modal-add-lead')">+ New Lead</button>
+                </div>
+
+                <div class="card">
+                    <h3>Opportunities</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Product Interest</th>
+                                <th>Value</th>
+                                <th>Stage</th>
+                                <th>Rep</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Invoicing View -->
+            <section id="view-invoices" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Invoicing</h2>
+                    <button class="btn-primary" onclick="app.openModal('modal-create-invoice')">+ Create Invoice</button>
+                </div>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+             <!-- Admin/Settings View -->
+             <section id="view-admin" class="view">
+                <h2>System Administration</h2>
+                <p style="margin-bottom: 1.5rem;">Manage users and system data.</p>
+
+                <div class="card">
+                    <h3>User Management</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-body"></tbody>
+                    </table>
+                    <button class="btn-outline" style="margin-top: 1rem;" onclick="app.openModal('modal-add-user')">+ Add User</button>
+                </div>
+
+                <div class="card">
+                    <h3>Data Management</h3>
+                    <p>Backup or restore the application database (JSON format).</p>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn-outline" onclick="app.downloadBackup()">Export Data</button>
+                        <button class="btn-outline" onclick="document.getElementById('import-file').click()">Import Data</button>
+                        <input type="file" id="import-file" style="display: none;" onchange="app.importBackup(this)">
+                        <button class="btn-danger" onclick="app.resetData()">Factory Reset</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Admin Guide</h3>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.6;">
+                        <li><strong>Permissions:</strong> Admins see all. Sales only see Dashboard, Sales, and Invoices. Warehouse only sees Inventory.</li>
+                        <li><strong>Security:</strong> Passwords are hashed (simulated) before storage.</li>
+                        <li><strong>Invoicing:</strong> Click "Print" on an invoice to generate the PDF.</li>
+                        <li><strong>Backups:</strong> Regularly use "Export Data" to save your LocalStorage state to a file.</li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add Item Modal -->
+    <div id="modal-add-item" class="modal-overlay">
+        <div class="modal">
+            <h3>Add Inventory Item</h3>
+            <form onsubmit="app.handleAddItem(event)">
+                <label>SKU</label>
+                <input type="text" name="sku" required placeholder="e.g. A-100">
+                <label>Product Name</label>
+                <input type="text" name="name" required>
+                <label>Initial Stock</label>
+                <input type="number" name="stock" required min="0">
+                <label>Low Stock Threshold</label>
+                <input type="number" name="threshold" required min="0">
+                <label>Unit Price ($)</label>
+                <input type="number" name="price" required min="0" step="0.01">
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary">Save Item</button>
+                    <button type="button" class="btn-outline" onclick="app.closeModals()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Adjust Stock Modal -->
+    <div id="modal-adjust-stock" class="modal-overlay">
+        <div class="modal">
+            <h3>Adjust Stock Level</h3>
+            <p id="adjust-item-name" style="margin-bottom: 1rem; color: var(--text-light);"></p>
+            <input type="hidden" id="adjust-item-id">
+            <label>Change Quantity (+/-)</label>
+            <input type="number" id="adjust-amount" placeholder="e.g. 5 or -2">
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="button" class="btn-primary" onclick="app.submitStockAdjust()">Update</button>
+                <button type="button" class="btn-outline" onclick="app.closeModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Lead Modal -->
+    <div id="modal-add-lead" class="modal-overlay">
+        <div class="modal">
+            <h3>New Sales Lead</h3>
+            <form onsubmit="app.handleAddLead(event)">
+                <label>Customer Name</label>
+                <input type="text" name="customer" required>
+                <label>Product Interest</label>
+                <input type="text" name="product" required>
+                <label>Estimated Value ($)</label>
+                <input type="number" name="value" required min="0">
+                <label>Stage</label>
+                <select name="stage">
+                    <option value="Lead">Lead</option>
+                    <option value="Proposal">Proposal</option>
+                    <option value="Negotiation">Negotiation</option>
+                    <option value="Closed Won">Closed Won</option>
+                </select>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary">Add to Pipeline</button>
+                    <button type="button" class="btn-outline" onclick="app.closeModals()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Invoice Modal -->
+    <div id="modal-create-invoice" class="modal-overlay">
+        <div class="modal">
+            <h3>Create New Invoice</h3>
+            <form onsubmit="app.handleCreateInvoice(event)">
+                <label>Customer Name</label>
+                <input type="text" name="customer" required>
+                <label>Select Product</label>
+                <select id="invoice-product-select" name="productId" required onchange="app.updateInvoiceTotal()">
+                    <!-- Filled by JS -->
+                </select>
+                <label>Quantity</label>
+                <input type="number" name="qty" value="1" min="1" required oninput="app.updateInvoiceTotal()">
+                <label>Tax Rate (%)</label>
+                <input type="number" name="tax" value="10" required oninput="app.updateInvoiceTotal()">
+                
+                <div style="background: var(--bg-light); padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                    <strong>Estimated Total: $<span id="invoice-calc-total">0.00</span></strong>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary">Generate Invoice</button>
+                    <button type="button" class="btn-outline" onclick="app.closeModals()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="modal-add-user" class="modal-overlay">
+        <div class="modal">
+            <h3>Add System User</h3>
+            <form onsubmit="app.handleAddUser(event)">
+                <label>Username</label>
+                <input type="text" name="username" required>
+                <label>Password</label>
+                <input type="password" name="password" required>
+                <label>Role</label>
+                <select name="role">
+                    <option value="admin">Administrator</option>
+                    <option value="sales">Sales Rep</option>
+                    <option value="warehouse">Warehouse Staff</option>
+                </select>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary">Create User</button>
+                    <button type="button" class="btn-outline" onclick="app.closeModals()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoice Preview / Print Area -->
+    <div id="invoice-preview-area">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;">
+            <div>
+                <h1>INVOICE</h1>
+                <p><strong>Invoice #:</strong> <span id="print-inv-num"></span></p>
+                <p><strong>Date:</strong> <span id="print-inv-date"></span></p>
+            </div>
+            <div style="text-align: right;">
+                <h3>My Company Inc.</h3>
+                <p>123 Business Rd.<br>City, State, 00000<br>contact@mycompany.com</p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <strong>Bill To:</strong><br>
+            <span id="print-inv-customer"></span>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+            <thead>
+                <tr style="background: #eee;">
+                    <th style="padding: 0.5rem; text-align: left;">Item</th>
+                    <th style="padding: 0.5rem; text-align: right;">Qty</th>
+                    <th style="padding: 0.5rem; text-align: right;">Price</th>
+                    <th style="padding: 0.5rem; text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody id="print-inv-items">
+                <!-- Items -->
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <div style="width: 250px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Subtotal:</span>
+                    <span id="print-inv-subtotal"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Tax:</span>
+                    <span id="print-inv-tax"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; border-top: 1px solid #333; padding-top: 0.5rem;">
+                    <span>Total:</span>
+                    <span id="print-inv-total"></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; text-align: center; font-size: 0.8rem; color: #666;">
+            Thank you for your business. Payment is due within 30 days.
+        </div>
+    </div>
+
+    <!-- Toasts Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        /**
+         * Simple CRM Application
+         * Architecture:
+         * 1. State Management: Simple object stored in localStorage.
+         * 2. Auth: Basic hash simulation (real apps need server-side auth).
+         * 3. Navigation: Single Page Application (SPA) logic.
+         * 4. Views: Render functions for each module.
+         */
+
+        const Utils = {
+            generateId: () => Math.random().toString(36).substr(2, 9),
+            formatCurrency: (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num),
+            formatDate: (dateStr) => new Date(dateStr).toLocaleDateString(),
+            hash: (str) => {
+                // Simple hash simulation for demo purposes. 
+                // In production, use bcrypt/WebCrypto on a secure backend.
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString();
+            }
+        };
+
+        const DB = {
+            key: 'crm_data_v1',
+            data: {
+                users: [],
+                inventory: [],
+                leads: [],
+                invoices: []
+            },
+            init() {
+                const stored = localStorage.getItem(this.key);
+                if (stored) {
+                    this.data = JSON.parse(stored);
+                } else {
+                    this.seed();
+                }
+            },
+            save() {
+                localStorage.setItem(this.key, JSON.stringify(this.data));
+            },
+            seed() {
+                // Initial data for testing
+                this.data.users = [
+                    { id: '1', username: 'admin', password: Utils.hash('password123'), role: 'admin' },
+                    { id: '2', username: 'sales', password: Utils.hash('password123'), role: 'sales' },
+                    { id: '3', username: 'warehouse', password: Utils.hash('password123'), role: 'warehouse' }
+                ];
+                this.data.inventory = [
+                    { id: '101', sku: 'WGT-01', name: 'Wireless Gaming Mouse', stock: 45, threshold: 10, price: 29.99 },
+                    { id: '102', sku: 'KBB-PRO', name: 'Mech Keyboard', stock: 8, threshold: 15, price: 89.99 },
+                    { id: '103', sku: 'MON-27', name: '27" 144Hz Monitor', stock: 20, threshold: 5, price: 199.50 }
+                ];
+                this.data.leads = [
+                    { id: 'L1', customer: 'Acme Corp', product: 'Mech Keyboard', value: 900, stage: 'Proposal', rep: 'sales' },
+                    { id: 'L2', customer: 'John Doe', product: 'Gaming Mouse', value: 30, stage: 'Closed Won', rep: 'sales' }
+                ];
+                this.data.invoices = [
+                    { id: 'INV-001', date: new Date().toISOString(), customer: 'John Doe', items: [{name: 'Gaming Mouse', qty: 1, price: 29.99}], subtotal: 29.99, tax: 3.00, total: 32.99, status: 'Paid' }
+                ];
+                this.save();
+            }
+        };
+
+        const App = {
+            currentUser: null,
+
+            init() {
+                DB.init();
+                
+                // Login Handler
+                document.getElementById('login-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const u = document.getElementById('username').value;
+                    const p = document.getElementById('password').value;
+                    this.login(u, p);
+                });
+            },
+
+            login(username, password) {
+                const user = DB.data.users.find(u => u.username === username && u.password === Utils.hash(password));
+                if (user) {
+                    this.currentUser = user;
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    this.setupUI();
+                    this.showToast(`Welcome back, ${user.username}!`, 'success');
+                } else {
+                    this.showToast('Invalid credentials', 'error');
+                }
+            },
+
+            logout() {
+                this.currentUser = null;
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            },
+
+            setupUI() {
+                // Set Profile Info
+                document.getElementById('current-user-name').textContent = this.currentUser.username;
+                document.getElementById('current-user-role').textContent = this.currentUser.role.toUpperCase();
+
+                // Build Nav based on Role
+                const nav = document.getElementById('nav-menu');
+                nav.innerHTML = '';
+
+                const items = [
+                    { id: 'view-dashboard', label: 'Dashboard', icon: '📊', roles: ['admin', 'sales'] },
+                    { id: 'view-inventory', label: 'Inventory', icon: '📦', roles: ['admin', 'warehouse'] },
+                    { id: 'view-sales', label: 'Sales Pipeline', icon: '💼', roles: ['admin', 'sales'] },
+                    { id: 'view-invoices', label: 'Invoices', icon: '📄', roles: ['admin', 'sales'] },
+                    { id: 'view-admin', label: 'Admin Panel', icon: '⚙️', roles: ['admin'] }
+                ];
+
+                items.forEach(item => {
+                    if (item.roles.includes(this.currentUser.role)) {
+                        const link = document.createElement('a');
+                        link.href = '#';
+                        link.innerHTML = `<span>${item.icon}</span> ${item.label}`;
+                        link.onclick = () => this.switchView(item.id, link);
+                        nav.appendChild(link);
+                    }
+                });
+
+                // Default view
+                if (nav.firstChild) nav.firstChild.click();
+            },
+
+            switchView(viewId, linkEl) {
+                // Hide all views
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                // Show target
+                document.getElementById(viewId).classList.add('active');
+                // Update Nav State
+                document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                if(linkEl) linkEl.classList.add('active');
+
+                // Refresh Data
+                if (viewId === 'view-dashboard') this.renderDashboard();
+                if (viewId === 'view-inventory') this.renderInventory();
+                if (viewId === 'view-sales') this.renderSales();
+                if (viewId === 'view-invoices') this.renderInvoices();
+                if (viewId === 'view-admin') this.renderAdmin();
+            },
+
+            /* --- DASHBOARD --- */
+            renderDashboard() {
+                const filter = document.getElementById('dash-filter').value;
+                let leads = DB.data.leads.filter(l => l.stage === 'Closed Won');
+                
+                // Simple date filter logic
+                const now = new Date();
+                if (filter === 'today') {
+                    leads = leads.filter(l => new Date(l.date || Date.now()).toDateString() === now.toDateString());
+                }
+                
+                const totalRev = leads.reduce((sum, l) => sum + parseFloat(l.value), 0);
+                const lowStockCount = DB.data.inventory.filter(i => i.stock <= i.threshold).length;
+
+                document.getElementById('dash-revenue').textContent = Utils.formatCurrency(totalRev);
+                document.getElementById('dash-deals').textContent = DB.data.leads.length;
+                document.getElementById('dash-stock').textContent = lowStockCount;
+
+                const tbody = document.getElementById('dash-table-body');
+                tbody.innerHTML = '';
+                
+                // Show recent leads/invoices combo
+                const activities = [
+                    ...DB.data.leads.map(l => ({ type: 'Lead', date: new Date(), name: l.customer, detail: l.product, amount: l.value, status: l.stage })),
+                    ...DB.data.invoices.map(i => ({ type: 'Invoice', date: new Date(i.date), name: i.customer, detail: 'Inv #'+i.id, amount: i.total, status: i.status }))
+                ].sort((a,b) => b.date - a.date).slice(0, 5);
+
+                activities.forEach(act => {
+                    const row = `<tr>
+                        <td>${Utils.formatDate(act.date)}</td>
+                        <td>${act.name}</td>
+                        <td>${act.detail}</td>
+                        <td>${Utils.formatCurrency(act.amount)}</td>
+                        <td><span class="status-badge ${this.getStatusClass(act.status)}">${act.status}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            },
+
+            /* --- INVENTORY --- */
+            renderInventory() {
+                const search = document.getElementById('inv-search').value.toLowerCase();
+                const filterType = document.getElementById('inv-filter').value;
+                
+                let items = DB.data.inventory;
+
+                if (filterType === 'low') {
+                    items = items.filter(i => i.stock <= i.threshold);
+                }
+
+                if (search) {
+                    items = items.filter(i => i.name.toLowerCase().includes(search) || i.sku.toLowerCase().includes(search));
+                }
+
+                const tbody = document.getElementById('inv-table-body');
+                tbody.innerHTML = '';
+
+                items.forEach(item => {
+                    const isLow = item.stock <= item.threshold;
+                    const row = `<tr>
+                        <td>${item.sku}</td>
+                        <td>${item.name}</td>
+                        <td style="${isLow ? 'color:var(--danger); font-weight:bold;' : ''}">${item.stock}</td>
+                        <td>${item.threshold}</td>
+                        <td>${Utils.formatCurrency(item.price)}</td>
+                        <td>
+                            <button class="btn-outline" style="padding: 2px 8px; font-size: 0.8rem;" onclick="app.openAdjustStock('${item.id}')">Adjust</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            },
+
+            handleAddItem(e) {
+                e.preventDefault();
+                const form = e.target;
+                const newItem = {
+                    id: Utils.generateId(),
+                    sku: form.sku.value,
+                    name: form.name.value,
+                    stock: parseInt(form.stock.value),
+                    threshold: parseInt(form.threshold.value),
+                    price: parseFloat(form.price.value)
+                };
+                DB.data.inventory.push(newItem);
+                DB.save();
+                this.closeModals();
+                this.renderInventory();
+                this.showToast('Item added successfully');
+                form.reset();
+            },
+
+            openAdjustStock(id) {
+                const item = DB.data.inventory.find(i => i.id === id);
+                if (!item) return;
+                document.getElementById('adjust-item-id').value = id;
+                document.getElementById('adjust-item-name').textContent = item.name;
+                document.getElementById('adjust-amount').value = '';
+                this.openModal('modal-adjust-stock');
+            },
+
+            submitStockAdjust() {
+                const id = document.getElementById('adjust-item-id').value;
+                const amount = parseInt(document.getElementById('adjust-amount').value);
+                const item = DB.data.inventory.find(i => i.id === id);
+                
+                if (item && !isNaN(amount)) {
+                    item.stock += amount;
+                    if (item.stock < 0) item.stock = 0;
+                    DB.save();
+                    this.closeModals();
+                    this.renderInventory();
+                    this.showToast(`Stock adjusted by ${amount}`);
+                }
+            },
+
+            /* --- SALES --- */
+            renderSales() {
+                const tbody = document.getElementById('sales-table-body');
+                tbody.innerHTML = '';
+                
+                // Sales only see their own, Admin sees all
+                let leads = DB.data.leads;
+                if (this.currentUser.role === 'sales') {
+                    leads = leads.filter(l => l.rep === this.currentUser.username);
+                }
+
+                leads.forEach(lead => {
+                    const row = `<tr>
+                        <td>${lead.customer}</td>
+                        <td>${lead.product}</td>
+                        <td>${Utils.formatCurrency(lead.value)}</td>
+                        <td>${lead.stage}</td>
+                        <td>${lead.rep}</td>
+                        <td>
+                            <button class="btn-primary" style="padding: 2px 8px; font-size: 0.8rem;" onclick="app.convertToInvoice('${lead.id}')">Invoice</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            },
+
+            handleAddLead(e) {
+                e.preventDefault();
+                const form = e.target;
+                const newLead = {
+                    id: Utils.generateId(),
+                    customer: form.customer.value,
+                    product: form.product.value,
+                    value: parseFloat(form.value.value),
+                    stage: form.stage.value,
+                    rep: this.currentUser.username
+                };
+                DB.data.leads.push(newLead);
+                DB.save();
+                this.closeModals();
+                this.renderSales();
+                this.showToast('Lead created');
+                form.reset();
+            },
+
+            convertToInvoice(leadId) {
+                const lead = DB.data.leads.find(l => l.id === leadId);
+                if (!lead) return;
+
+                // Simple conversion logic - assumes product exists or creates generic one
+                // Ideally, user selects specific inventory item.
+                // For this demo, we open the invoice modal pre-filled
+                this.openModal('modal-create-invoice');
+                
+                // Pre-fill form
+                const form = document.querySelector('#modal-create-invoice form');
+                form.customer.value = lead.customer;
+                
+                // Try to find matching inventory
+                const prodSelect = document.getElementById('invoice-product-select');
+                const match = Array.from(prodSelect.options).find(o => o.text.includes(lead.product));
+                if (match) {
+                    prodSelect.value = match.value;
+                }
+                this.updateInvoiceTotal();
+            },
+
+            /* --- INVOICES --- */
+            renderInvoices() {
+                const tbody = document.getElementById('invoice-table-body');
+                tbody.innerHTML = '';
+
+                DB.data.invoices.forEach(inv => {
+                    const row = `<tr>
+                        <td>${inv.id}</td>
+                        <td>${Utils.formatDate(inv.date)}</td>
+                        <td>${inv.customer}</td>
+                        <td>${Utils.formatCurrency(inv.total)}</td>
+                        <td><span class="status-badge ${this.getStatusClass(inv.status)}">${inv.status}</span></td>
+                        <td>
+                            <button class="btn-outline" onclick="app.printInvoice('${inv.id}')">Print/PDF</button>
+                            ${inv.status === 'Unpaid' ? `<button class="btn-primary" style="margin-left:5px;" onclick="app.markPaid('${inv.id}')">Pay</button>` : ''}
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            },
+
+            handleCreateInvoice(e) {
+                e.preventDefault();
+                const form = e.target;
+                const productId = form.productId.value;
+                const product = DB.data.inventory.find(i => i.id === productId);
+                const qty = parseInt(form.qty.value);
+                const taxRate = parseFloat(form.tax.value);
+
+                const subtotal = product.price * qty;
+                const taxAmt = subtotal * (taxRate / 100);
+                const total = subtotal + taxAmt;
+
+                const newInv = {
+                    id: 'INV-' + (DB.data.invoices.length + 1000),
+                    date: new Date().toISOString(),
+                    customer: form.customer.value,
+                    items: [{ name: product.name, qty: qty, price: product.price }],
+                    subtotal: subtotal,
+                    tax: taxAmt,
+                    total: total,
+                    status: 'Unpaid'
+                };
+
+                // Reduce stock
+                product.stock -= qty;
+                
+                DB.data.invoices.push(newInv);
+                DB.save();
+                this.closeModals();
+                this.renderInvoices();
+                this.showToast('Invoice Generated');
+                form.reset();
+            },
+
+            markPaid(id) {
+                const inv = DB.data.invoices.find(i => i.id === id);
+                if (inv) {
+                    inv.status = 'Paid';
+                    DB.save();
+                    this.renderInvoices();
+                    this.showToast('Invoice marked as Paid');
+                }
+            },
+
+            printInvoice(id) {
+                const inv = DB.data.invoices.find(i => i.id === id);
+                if(!inv) return;
+
+                // Populate Print View
+                document.getElementById('print-inv-num').textContent = inv.id;
+                document.getElementById('print-inv-date').textContent = Utils.formatDate(inv.date);
+                document.getElementById('print-inv-customer').textContent = inv.customer;
+                
+                const tbody = document.getElementById('print-inv-items');
+                tbody.innerHTML = inv.items.map(item => `
+                    <tr>
+                        <td style="padding:0.5rem;">${item.name}</td>
+                        <td style="padding:0.5rem; text-align:right;">${item.qty}</td>
+                        <td style="padding:0.5rem; text-align:right;">${Utils.formatCurrency(item.price)}</td>
+                        <td style="padding:0.5rem; text-align:right;">${Utils.formatCurrency(item.price * item.qty)}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('print-inv-subtotal').textContent = Utils.formatCurrency(inv.subtotal);
+                document.getElementById('print-inv-tax').textContent = Utils.formatCurrency(inv.tax);
+                document.getElementById('print-inv-total').textContent = Utils.formatCurrency(inv.total);
+
+                // Trigger Browser Print
+                window.print();
+            },
+
+            /* --- ADMIN --- */
+            renderAdmin() {
+                const tbody = document.getElementById('admin-users-body');
+                tbody.innerHTML = '';
+                DB.data.users.forEach(u => {
+                    tbody.innerHTML += `<tr>
+                        <td>${u.username}</td>
+                        <td>${u.role}</td>
+                        <td>
+                            ${u.username !== 'admin' ? `<button class="btn-danger" style="padding:2px 6px; font-size:0.8rem" onclick="app.deleteUser('${u.id}')">Delete</button>` : ''}
+                        </td>
+                    </tr>`;
+                });
+            },
+
+            handleAddUser(e) {
+                e.preventDefault();
+                const form = e.target;
+                const newUser = {
+                    id: Utils.generateId(),
+                    username: form.username.value,
+                    password: Utils.hash(form.password.value),
+                    role: form.role.value
+                };
+                DB.data.users.push(newUser);
+                DB.save();
+                this.closeModals();
+                this.renderAdmin();
+                this.showToast('User added');
+                form.reset();
+            },
+
+            deleteUser(id) {
+                if(confirm('Are you sure?')) {
+                    DB.data.users = DB.data.users.filter(u => u.id !== id);
+                    DB.save();
+                    this.renderAdmin();
+                }
+            },
+
+            downloadBackup() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB.data));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "crm_backup_" + new Date().toISOString().slice(0,10) + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            },
+
+            importBackup(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if(data.users && data.inventory) {
+                            DB.data = data;
+                            DB.save();
+                            this.showToast('Data restored successfully', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            throw new Error('Invalid format');
+                        }
+                    } catch(err) {
+                        this.showToast('Invalid backup file', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            resetData() {
+                if(confirm('WARNING: This will wipe all data and return to defaults. Continue?')) {
+                    localStorage.removeItem(DB.key);
+                    location.reload();
+                }
+            },
+
+            /* --- HELPERS --- */
+            openModal(id) {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+                document.getElementById(id).style.display = 'flex';
+                
+                // Specific Init logic
+                if (id === 'modal-create-invoice') {
+                    const select = document.getElementById('invoice-product-select');
+                    select.innerHTML = DB.data.inventory.map(i => `<option value="${i.id}">${i.name} ($${i.price})</option>`).join('');
+                    this.updateInvoiceTotal();
+                }
+            },
+
+            closeModals() {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            },
+
+            updateInvoiceTotal() {
+                const form = document.querySelector('#modal-create-invoice form');
+                if (!form) return;
+                const productId = form.productId.value;
+                const product = DB.data.inventory.find(i => i.id === productId);
+                const qty = parseInt(form.qty.value) || 0;
+                const taxRate = parseFloat(form.tax.value) || 0;
+                
+                if (product) {
+                    const sub = product.price * qty;
+                    const total = sub + (sub * (taxRate / 100));
+                    document.getElementById('invoice-calc-total').textContent = total.toFixed(2);
+                }
+            },
+
+            getStatusClass(status) {
+                if (status === 'Paid' || status === 'Closed Won') return 'status-success';
+                if (status === 'Unpaid' || status === 'Lead') return 'status-warning';
+                return 'status-danger';
+            },
+
+            showToast(msg, type = 'normal') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                if (type === 'error') toast.style.backgroundColor = '#ef4444';
+                if (type === 'success') toast.style.backgroundColor = '#22c55e';
+                toast.textContent = msg;
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        };
+
+        // Initialize App
+        window.app = App;
+        App.init();
+
+    </script>
+</body>
+</html>
